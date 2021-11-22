@@ -1,5 +1,6 @@
 from django.http.response import HttpResponse
 from django.views import View
+from django.db.models import Sum, Avg, Max, Min, Count
 
 from .models import Student
 
@@ -164,20 +165,52 @@ class DBView(View):
     #         print(f"姓名:{student.name},年龄:{student.age}")
     #     return HttpResponse("ok")
     # QuerySet查询集
+    # def get(self, request):
+    #     # 查询出301班是否有男生
+    #     student = Student.objects.filter(classmate=301)
+    #     student = student.order_by("-age")
+    #     student = student.filter(sex=1)
+    #     print(student)
+    #     ret1 = student.values()  # 默认把所有字段全部转换返回
+    #     print(ret1)
+    #     ret2 = student.values("id", "name", "age")  # 可以通过参数设置要转换的字段并返回
+    #     print(ret2)
+    #     ret3 = student.values_list()  # 默认把所有字段全部转换返回
+    #     print(ret3)
+    #     ret4 = student.values_list("id", "name", "age")  # 可以通过参数设置要转换的字段并返回
+    #     print(ret4)
+    #     return HttpResponse("ok")
+
+
+
+    # 分组查询
+    # def get(self, request):
+    #     # 查询所有学生年龄总数
+    #     # total = Student.objects.aggregate(Sum("age"))
+    #     # print(total)
+    #     total = Student.objects.aggregate(t=Sum("age"))
+    #     print(total["t"]/102)
+    #     avg = Student.objects.aggregate(Avg("age"))
+    #     print(avg)
+    #     return HttpResponse("ok")
+    # 分组聚合
+    # def get(self, request):
+    #     # 统计不同班级的人数
+    #     class_list = Student.objects.values("classmate").annotate(total=Count("id"))\
+    #         .values("classmate","total")
+    #     # print(class_list)
+    #     # 统计每个班中年龄最大的学生
+    #     age_list = Student.objects.values("classmate").annotate(total=Max("age")).\
+    #         order_by("-age").values("classmate", "name", "age")
+    #     # print(age_list)
+    #     # 统计不同班级的人数并排除数量低于4人的班级
+    #     class_list = Student.objects.values("classmate").annotate(total=Count("id")).filter(total__gte=4)
+    #     print(class_list)
+    #     return HttpResponse("ok")
+    # 原生查询
     def get(self, request):
-        # 查询出301班是否有男生
-        student = Student.objects.filter(classmate=301)
-        student = student.order_by("-age")
-        student = student.filter(sex=1)
-        print(student)
-        ret1 = student.values()  # 默认把所有字段全部转换返回
-        print(ret1)
-        ret2 = student.values("id", "name", "age")  # 可以通过参数设置要转换的字段并返回
-        print(ret2)
-        ret3 = student.values_list()  # 默认把所有字段全部转换返回
-        print(ret3)
-        ret4 = student.values_list("id", "name", "age")  # 可以通过参数设置要转换的字段并返回
-        print(ret4)
+        ret = Student.objects.raw("select id,name from tb_student")
+        print(ret[0])
         return HttpResponse("ok")
 
 
