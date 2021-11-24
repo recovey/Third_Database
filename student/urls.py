@@ -5,4 +5,5 @@ urlpatterns = [
     path("", views.index),
     path("base/", views.BaseDBView.as_view()),
     path("db/", views.DBView.as_view()),
+    path("View/", views.RelationView.as_view()),
 ]

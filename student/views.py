@@ -1,4 +1,4 @@
-from django.http.response import HttpResponse
+from django.http.response import HttpResponse, JsonResponse
 from django.views import View
 from django.db.models import Sum, Avg, Max, Min, Count
 
@@ -181,8 +181,6 @@ class DBView(View):
     #     print(ret4)
     #     return HttpResponse("ok")
 
-
-
     # 分组查询
     # def get(self, request):
     #     # 查询所有学生年龄总数
@@ -214,3 +212,86 @@ class DBView(View):
         return HttpResponse("ok")
 
 
+from .models import StudentInfo
+
+
+class RelationView(View):
+    # # 一对一的添加
+    # def get(self, request):
+    #     student_info = StudentInfo.objects.create(
+    #         student_id=2,
+    #         address="北京市昌平区沙河镇白沙路1004号"
+    #     )
+    #     print(student_info)
+    #     return HttpResponse("ok")
+
+    # def get(self, request):
+    #     # student = Student.objects.get(id=1)
+    #     # student.name = "我被修改了"
+    #     # student.save()
+    #     # 用次表改主表数据
+    #     # student_info = StudentInfo.objects.get(pk=7)
+    #     # print(student_info.student.name)
+    #     # student_info.student.name = "我又回来了"
+    #     # student_info.student.save()
+    #     # print(student_info.student.name)
+    #     # 更改和删除数据
+    #     student = Student.objects.get(pk=1)
+    #     print(student.info.address)
+    #     student.info.address = "长沙民政"
+    #     student.info.save()
+    #     print(student.info.address)
+    #     return HttpResponse("ok")
+    # 一对多
+    # def get(self,request):
+    #     # student = Student.objects.get(pk=1)
+    #     # print(student.score_list)
+    #     # 添加数据
+    #     # student = Student.objects.get(pk=1)
+    #     # student.score_list.create(student=student,score=60)
+    #     # 查询数据
+    #     student =Student.objects.get(pk=1)
+    #     print(student.name)
+    #     score_list = student.score_list.all()
+    #     for score in score_list:
+    #         print(score.score)
+    #     return HttpResponse("ok")
+    # 多对多
+    # def get(self, request):
+    #     from .models import Teacher, Course
+    #     """添加数据"""
+    #     # teacher1 = Teacher.objects.create(name="吴老师")
+    #     # teacher2 = Teacher.objects.create(name="李老师")
+    #     # teacher3 = Teacher.objects.create(name="赵老师")
+    #     # teacher4 = Teacher.objects.create(name="黄老师")
+    #     # course1 = Course.objects.create(name="python终极")
+    #     # course2 = Course.objects.create(name="python进阶")
+    #     # course3 = Course.objects.create(name="python高级")
+    #     # Teacher.objects.create(name="曾老师").save()
+    #     # teacher = Teacher.objects.get(pk=1)
+    #     # teacher.course_list.create(
+    #     #     name="JavaScript"
+    #     # ).save()
+    #     """查询数据"""
+    #     # teacher = Teacher.objects.filter(name="吴老师").first()
+    #     # print(teacher.name)
+    #     """更新和删除数据"""
+    #     course = Course.objects.get(pk=3)
+    #     teacher = Teacher.objects.filter(name="吴老师").first()
+    #     course.teacher_list.remove(teacher)
+    #     return HttpResponse("ok")
+    # 自关联
+    def get(self, request):
+        from .models import Teacher, Course, Area
+        # 顶级单位查询
+        # Area.objects.filter(parent_id__isnull=)
+        province_list = Area.objects.filter(parent_id__isnull=True).all()
+        province = province_list.filter(name="湖南省").first()
+        print(province)
+        city_list = province.son_list.all()
+        print(city_list)
+        city = city_list.filter(name="长沙市").first()
+        print(city)
+        area_list = city.son_list.values()
+        print(area_list)
+        return HttpResponse("ok")

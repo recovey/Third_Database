@@ -25,25 +25,14 @@ class Student(BaseModel):
     )
 
     # 字段名 = models.数据类型(约束选项1,约束选项2, verbose_name="注释")
-    # SQL: id bigint primary_key auto_increment not null comment="主键",
-    # id = models.AutoField(primary_key=True, null=False, verbose_name="主键") # django会自动在创建数据表的时候生成id主键/还设置了一个调用别名 pk
-
-    # SQL: name varchar(20) not null comment="姓名"
-    # SQL: key(name),
-    name = models.CharField(max_length=20, db_index=True, verbose_name="姓名")
-
-    # SQL: age smallint not null comment="年龄"
-    age = models.SmallIntegerField(verbose_name="年龄")
-
-    # SQL: sex tinyint not null comment="性别"
-    # sex = models.BooleanField(verbose_name="性别")
-    sex = models.SmallIntegerField(choices=SEX_CHOICES, default=2)
-
-    # SQL: class varchar(5) not null comment="班级"
-    # SQL: key(class)
-    classmate = models.CharField(db_column="class", max_length=5, db_index=True, verbose_name="班级")
-    # SQL: description longtext default "" not null comment="个性签名"
-    description = models.TextField(default=None, null=True, verbose_name="个性签名")
+    # django的ORM会自动生成一个整型的主键,默认自增长,非空!所以在django中创建模型是不需要声明主键的,除非主键不是整型.或者非自增长
+    # 一旦开发者声明了AutoField(primary_key=True)主键字段,则django就不会自动生成主键字段.
+    name = models.CharField(max_length=20, db_index=True, null=True, verbose_name='姓名')
+    age = models.SmallIntegerField(default=0, null=True, verbose_name='年龄')
+    # sex  = models.BooleanField(default=True, verbose_name="性别")
+    sex = models.SmallIntegerField(choices=SEX_CHOICES, null=True, default=0, verbose_name="性别")
+    class_number = models.IntegerField(db_column="class", null=True, verbose_name='班级')
+    description = models.TextField(default="", null=True, verbose_name='个性签名')
 
     # 2. 数据表结构信息
     class Meta:
@@ -54,22 +43,64 @@ class Student(BaseModel):
     # 3. 自定义数据库操作方法
     def __str__(self):
         """定义每个数据对象的显示信息"""
-        return "<User %s>" % self.name
+        return "<User(%s) %s[年龄:%s]>" % (self.pk, self.name, self.age)
 
 
-# def student(Model):
-#     name = models.CharField(max_length=20, db_index=True, verbose_name="姓名")
-#     age = models.CharField(verbose_name="年龄")
-#     sex = models.SmallIntegerField(verbose_name="年龄")
-#     classmate = models.CharField(db_column="class", max_length=5, db_index=True, verbose_name="班级")
-#     description = models.TextField(default="", verbose_name="个性签名")
-#     created_time = models.DateTimeField(auto_now_add=True, verbose_name="添加时间")
-#     updated_time = models.DateTimeField(auto_now=True, verbose_name="更新时间")
-#
-#     class Mate:
-#         db_table = "db_student"
-#         verbose_name = "学生信息表"
-#         verbose_name_plural = verbose_name
-#
-#     def __str__(self):
-#         return f"<User {self.name}>"
+class StudentInfo(BaseModel):
+    """学生信息附加表"""
+    # on_delete= 关联关系的设置
+
+    # models.CASCADE    删除主键以后, 对应的外键所在数据也被删除
+    # models.DO_NOTHING 删除主键以后, 对应的外键不做任何修改
+    # 反向查找字段 related_name
+    # 通过info查找学生信息, StudentInfo.student
+    # 通过学生信息查找info, Student.info
+    student = models.OneToOneField(Student, related_name="info", on_delete=models.DO_NOTHING, null=True)
+    address = models.CharField(max_length=255, verbose_name="家庭地址")
+
+    class Meta:
+        db_table = 'tb_student_info'
+        verbose_name = '学生信息表'
+        verbose_name_plural = verbose_name
+
+
+class Achievement(BaseModel):
+    """成绩表"""
+    student = models.ForeignKey(Student, related_name="score_list", on_delete=models.CASCADE, null=True)
+    # max_digits 总数值长度[有多少个字符,不包含小数点]
+    # decimal_places 小数位数值的字符最多允许有几个
+    score = models.DecimalField(max_digits=5, decimal_places=2, verbose_name="成绩")
+
+    class Meta:
+        db_table = 'tb_achievement'
+        verbose_name = '学生成绩表'
+        verbose_name_plural = verbose_name
+
+
+class Teacher(models.Model):
+    name = models.CharField(max_length=15, verbose_name="老师")
+
+    class Meta:
+        db_table = "tb_teacher"
+        verbose_name = '老师信息表'
+        verbose_name_plural = verbose_name
+
+
+class Course(models.Model):
+    name = models.CharField(max_length=15, verbose_name="课程")
+    teacher_list = models.ManyToManyField(Teacher, related_name="course_list")
+
+    class Meta:
+        db_table = "tb_course"
+        verbose_name = '老师信息表'
+        verbose_name_plural = verbose_name
+
+
+class Area(models.Model):
+    """行政区划"""
+    # 注意，django会自动创建主键，并默认字段名为：id
+    name = models.CharField(max_length=20)
+    parent = models.ForeignKey('self',on_delete=models.DO_NOTHING, blank=True, null=True, related_name="son_list")
+
+    def __str__(self):
+        return f"<Area> {self.name}"
